@@ -1,23 +1,29 @@
 
-composer network install --card PeerAdmin@hlfv1 --archiveFile ph360v2@0.0.2-deploy.135.bna
+composer network install --card PeerAdmin@hlfv1 --archiveFile ph360v2@0.0.2-deploy.157.bna
 
-composer network start --networkName ph360v2.bna --networkVersion 0.0.2 --networkAdmin admin --networkAdminEnrollSecret adminpw --card PeerAdmin@hlfv1 --file networkadmin.card
+composer network start --networkName ph360v2 --networkVersion 0.0.2-deploy.157 --networkAdmin admin --networkAdminEnrollSecret adminpw --card PeerAdmin@hlfv1 --file networkadmin.card
 
 composer card import --file networkadmin.card
 
 composer network ping --card admin@ph360v2
 
-composer participant add -c admin@ph360v2 -d '{"$class":"org.acme.mynetwork.Customer", "tradeId":"0001","Name":"Ryan","PrivateKey":"","RanGenKey":"","HashedRanGenKey":""}'
+composer participant add -c admin@ph360v2 -d '{"$class":"org.acme.mynetwork.Customer", "tradeId":"0001","Name":"Ryan","Caddress":"Cooper Square","PrivateKey":"","RanGenKey":"","HashedRanGenKey":""}'
 
 composer identity issue --card admin@ph360v2 --file customer1.card --newUserId 1111 --participantId 'resource:org.acme.mynetwork.Customer#0001'
 
-composer participant add -c admin@ph360v2 -d '{"$class":"org.acme.mynetwork.Restaurant","tradeId":"0002","PublicKey":"","Name":"BurgerKing","PrivateKey":"","RRanGenKey":"","HashedRRanGenKey":""}'
+composer participant add -c admin@ph360v2 -d '{"$class":"org.acme.mynetwork.Restaurant","tradeId":"0002","PublicKey":"","Name":"BurgerKing","PrivateKey":"","RRanGenKey":"","HashedRRanGenKey":"","Caddress":""}'
 
 composer identity issue --card admin@ph360v2 --file restaurant1.card --newUserId 2222 --participantId 'resource:org.acme.mynetwork.Restaurant#0002'
+
+composer participant add -c admin@ph360v2 -d '{"$class":"org.acme.mynetwork.PublicRestaurant","tradeId":"0002","Score":0}'
+
+composer identity issue --card admin@ph360v2 --file publicrestaurant1.card --newUserId 3333 --participantId 'resource:org.acme.mynetwork.PublicRestaurant#0002'
 
 composer card import --file customer1.card
 
 composer card import --file restaurant1.card
+
+composer card import --file publicrestaurant1.card
 
 // generate rest server
 composer-rest-server
@@ -28,19 +34,21 @@ N
 Y
 N
 
-composer transaction submit --card admin@ph360v2 -d '{"$class": "org.acme.mynetwork.PlaceOrder","orderId": "ABC","fooditem": "burger","quantity": 2,"Cowner": "resource:org.acme.mynetwork.Customer#0001"}'
+composer transaction submit --card admin@ph360v2 -d '{"$class": "org.acme.mynetwork.PlaceOrder","orderId": "ABC","fooditem": "burger","quantity": 2,"Cowner": "resource:org.acme.mynetwork.Customer#0001","Rowner":"resource:org.acme.mynetwork.Restaurant#0002"}'
 
 composer transaction submit --card admin@ph360v2 -d '{"$class": "org.acme.mynetwork.UpdateOrderStatus","status":"Food being prepared","commodity":"resource:org.acme.mynetwork.Commodity#ABC","Rowner":"resource:org.acme.mynetwork.Restaurant#0002"}'
 
-composer transaction submit --card admin@ph360v2 -d '{"$class": "org.acme.mynetwork.CConfirmDelivery","RRanGenKey":"8D3521A069AD3C49D3926110E6118588","Rowner":"resource:org.acme.mynetwork.Restaurant#0002","commodity":"resource:org.acme.mynetwork.Commodity#ABC"}'
+composer transaction submit --card admin@ph360v2 -d '{"$class": "org.acme.mynetwork.CConfirmDelivery","RRanGenKey":"7578C5CA8B6C61459CCDE4043D93FE16","Score":"0","Rowner":"resource:org.acme.mynetwork.Restaurant#0002","PubRowner":"0002","commodity":"resource:org.acme.mynetwork.Commodity#ABC"}'
 
-composer transaction submit --card admin@ph360v2 -d '{"$class": "org.acme.mynetwork.RConfirmDelivery","CRanGenKey":"6B0F9DB5655E277C590A7024D0FFFF2E","Cowner":"resource:org.acme.mynetwork.Customer#0001","commodity":"resource:org.acme.mynetwork.Commodity#ABC"}'
+composer transaction submit --card admin@ph360v2 -d '{"$class": "org.acme.mynetwork.RConfirmDelivery","CRanGenKey":"02D2EB0DABA60D439510122A48E4E55F","Cowner":"resource:org.acme.mynetwork.Customer#0001","commodity":"resource:org.acme.mynetwork.Commodity#ABC"}'
 
 yo hyperledger-composer:angular
 //go into angular-app directory
 npm start
+// go to http://localhost:4200/
 
 
 //To start over go to fabric-dev-servers
 ./teardownFabric.sh
 rm -Rf ~/.composer/
+
